@@ -56,35 +56,27 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: ${{ matrix.dockerimage }}-latest
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/docker-${{ matrix.dockerimage }}:test
+          tags: ghcr.io/nejch/docker-${{ matrix.dockerimage }}:test
           platforms: ${{ matrix.platforms }}
           load: true
       -
         name: Test
         run: |
-          docker run --rm ${{ secrets.DOCKERHUB_USERNAME }}/docker-${{ matrix.dockerimage }}:test
+          docker run --rm ghcr.io/nejch/docker-${{ matrix.dockerimage }}:test
       -
-        name: Login to DockerHub
-        uses: docker/login-action@v1
+        name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-        if: github.ref == 'refs/heads/master'
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        if: github.ref == 'refs/heads/ghcr-io'
       -
         name: Build and push
         uses: docker/build-push-action@v2
         with:
           context: ${{ matrix.dockerimage }}-latest
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/docker-${{ matrix.dockerimage }}:latest
+          tags: ghcr.io/nejch/docker-${{ matrix.dockerimage }}:latest
           platforms: ${{ matrix.platforms }}
-        if: github.ref == 'refs/heads/master'
-      -
-        name: Update repo description
-        uses: peter-evans/dockerhub-description@v2
-        if: github.repository == 'rndmh3ro/docker-ansible' && github.ref == 'refs/heads/master'
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: ${{ secrets.DOCKERHUB_USERNAME }}/docker-${{ matrix.dockerimage }}
-          short-description: ${{ github.event.repository.description }}
+        if: github.ref == 'refs/heads/ghcr-io'
